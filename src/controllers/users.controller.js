@@ -217,4 +217,86 @@ const refereshAccessToken = asyncHandlerPromises(async (req,res) => {
 
 });
 
-export { RegisterUser, LoginUser, LogOutUser ,refereshAccessToken };
+const getCurrentUser = asyncHandlerPromises(async (req,res) => {
+   
+   const LoggedInUser = await userModel.findById(req.user).select('-password -refereshToken');
+
+   if(!LoggedInUser){
+      throw new APIError(401,'Unauthorized Request ! ');
+   }
+
+   return res.status(201).json(new APIResponse(201,LoggedInUser,"User Details Fetched Successfully !"));
+});
+
+const changeCurrentPassword = asyncHandlerPromises(async (req,res) => {
+   const {oldPassword,newPassword} = req.body;
+
+   if(!oldPassword){
+      throw new APIError(401,"Please Provide Old Password !");
+   }
+
+   if(!newPassword){
+      throw new APIError(401,"Please Provide New Password !");
+   }
+
+   const user = await userModel.findOne({_id : req.user}).select("-passsword");
+
+   if(!user){
+      throw new APIError(401,"Unauthorized Request");
+   }
+
+   user.password = newPassword;
+   await user.save();
+
+   return res.status(201).json(new APIResponse(401,{},"Passsword Updated Successfully !"));
+});
+
+const updateAvatar = asyncHandlerPromises(async (req,res) => {
+   const avatar = req.file?.path;
+
+   if(!avatar){
+      throw new APIError(401,"Avatar File is Missing !");
+   }
+
+   const uploadAvatarURL = await handleFileUploading(avatar);
+
+   if(!uploadAvatarURL){
+      throw new APIError(401,"Error While Uploading Avatar !");
+   }
+
+
+   const result = await userModel.findOneAndUpdate({_id : req.user},{
+      $set : {
+         avatar : uploadAvatarURL
+      }
+   },{new : true});
+
+   return res.status(201).json(new APIResponse(201,"Avatar Updated Successfully !"));
+})
+
+const updateCoverImage = asyncHandlerPromises(async(req,res)=>{
+   const cover = req.file?.path;
+
+   if(!cover){
+      throw new APIError(401,"Cover File is Missing !");
+   }
+
+   const uploadCoverImage = await handleFileUploading(cover);
+
+   if(!uploadCoverImage){
+      throw new APIError(401,"Error While Uplaoding Cover Image !");
+   }
+
+   const result = await userModel.findOneAndUpdate({_id : req.user},{
+      $set: {
+         coverImage : uploadCoverImage
+      }
+   },{
+      new : true
+   });
+
+   return res.status(201).json(new APIResponse(201,"Cover Image Updated Successfully !"));
+
+});
+
+export { RegisterUser, LoginUser, LogOutUser ,refereshAccessToken ,getCurrentUser ,changeCurrentPassword,updateAvatar,updateCoverImage};

@@ -5,7 +5,7 @@ const subScripitionSchema = new mongoose.Schema({
     channel : {
         type : Schema.Types.ObjectId,ref:'users' // the one whom Subscriber is subscribing
     }
-});
+},{timestamps : true});
 
 
 export const subScriptionModel = mongoose.model('subscription',subScripitionSchema);
